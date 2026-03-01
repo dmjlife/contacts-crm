@@ -73,16 +73,42 @@ app.post('/api/send-email', async (req, res) => {
         // Use custom sender name if provided, otherwise use the one extracted from the email string
         const finalSenderName = customSenderName || defaultSenderName;
 
-        // Send using the v4 SDK `transactionalEmails.sendTransacEmail` method
-        const data = await brevo.transactionalEmails.sendTransacEmail({
-            subject: subject || "Message from Contacts App",
-            htmlContent: message, // Support HTML messages for rich text
-            sender: { name: finalSenderName, email: senderAddress },
-            to: recipients.map(email => ({ email }))
-        });
+        // Helper: random delay between min and max milliseconds
+        const randomDelay = (min, max) => new Promise(resolve =>
+            setTimeout(resolve, Math.floor(Math.random() * (max - min + 1)) + min)
+        );
 
-        console.log('Email sent successfully via Brevo:', data);
-        res.status(200).json({ success: true, data });
+        // Send emails individually with a random delay between each
+        const results = [];
+        for (let i = 0; i < recipients.length; i++) {
+            const recipientEmail = recipients[i];
+
+            // Add a random 2–5 second delay between sends (skip delay before the first send)
+            if (i > 0) {
+                const delay = Math.floor(Math.random() * 3000) + 2000; // 2000–5000ms
+                console.log(`Waiting ${delay}ms before sending to ${recipientEmail}...`);
+                await randomDelay(delay, delay);
+            }
+
+            try {
+                const data = await brevo.transactionalEmails.sendTransacEmail({
+                    subject: subject || "Message from Contacts App",
+                    htmlContent: message,
+                    sender: { name: finalSenderName, email: senderAddress },
+                    to: [{ email: recipientEmail }]
+                });
+                console.log(`[${i + 1}/${recipients.length}] Sent to ${recipientEmail}:`, data);
+                results.push({ email: recipientEmail, success: true });
+            } catch (sendErr) {
+                console.error(`[${i + 1}/${recipients.length}] Failed to send to ${recipientEmail}:`, sendErr.body || sendErr);
+                results.push({ email: recipientEmail, success: false, error: sendErr.body?.message || sendErr.message });
+            }
+        }
+
+        const succeeded = results.filter(r => r.success).length;
+        const failed = results.filter(r => !r.success).length;
+        console.log(`Bulk send complete: ${succeeded} sent, ${failed} failed`);
+        res.status(200).json({ success: failed === 0, sent: succeeded, failed, results });
 
     } catch (error) {
         console.error('Brevo Server Error:', error.body || error);
