@@ -1,10 +1,10 @@
 export const mockContacts = [
   {
     id: '1',
-    name: 'Sarah Chen',
+    name: 'David James',
     title: 'Product Manager',
     company: 'TechFlow',
-    email: 'sarah.chen@example.com',
+    email: 'davidmckenziejames@gmail.com',
     phone: '+1 (555) 012-3456',
     avatar: 'https://i.pravatar.cc/150?u=sarah',
     tags: ['VIP', 'Investor', 'Tech'],

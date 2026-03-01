@@ -92,22 +92,10 @@ body {
 /* Layout */
 .app-container {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  flex-direction: column;
+  min-height: 100vh;
   background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 40%),
     radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.05), transparent 40%);
-}
-
-.sidebar {
-  width: 280px;
-  border-right: 1px solid var(--surface-border);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(20px);
-  z-index: 10;
 }
 
 .main-content {
@@ -115,8 +103,37 @@ body {
   display: flex;
   flex-direction: column;
   padding: 2rem;
-  overflow-y: auto;
-  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border);
+}
+
+.search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+.tag-filters-container {
+  flex: 2;
+}
+
+.tag-list-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 /* Scrollbar styling */

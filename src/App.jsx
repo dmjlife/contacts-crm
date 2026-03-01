@@ -61,74 +61,17 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
-            <div style={{ background: 'var(--accent-color)', padding: '0.5rem', borderRadius: '0.5rem' }}>
-              <Filter size={24} color="white" />
-            </div>
-            CRM
-          </h1>
-
-          <div style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Search
-            </h2>
-            <div style={{ position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-              <input
-                type="text"
-                placeholder="Search contacts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ width: '100%', paddingLeft: '2.5rem' }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <h2 style={{ fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Filter by Tags
-            </h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {allTags.map(tag => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  style={{
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: 'var(--radius-full)',
-                    border: `1px solid ${selectedTags.includes(tag) ? 'var(--accent-color)' : 'var(--surface-border)'}`,
-                    background: selectedTags.includes(tag) ? 'var(--accent-color)' : 'transparent',
-                    color: selectedTags.includes(tag) ? 'white' : 'var(--text-primary)',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    transition: 'var(--transition)'
-                  }}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            {selectedTags.length > 0 && (
-              <button
-                onClick={() => setSelectedTags([])}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.875rem', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-              >
-                <X size={14} /> Clear Filters
-              </button>
-            )}
-          </div>
-        </div>
-      </aside>
-
       {/* Main Content */}
       <main className="main-content">
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h2>Contacts <span style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '400' }}>({filteredContacts.length})</span></h2>
-            <p>Select contacts to perform bulk actions</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ background: 'var(--accent-color)', padding: '0.6rem', borderRadius: '0.75rem', display: 'flex' }}>
+              <Filter size={24} color="white" />
+            </div>
+            <div>
+              <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Contacts CRM</h1>
+              <p style={{ fontSize: '0.875rem' }}>{filteredContacts.length} contacts found</p>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -150,6 +93,61 @@ function App() {
             </button>
           </div>
         </header>
+
+        {/* Top Filter Bar */}
+        <div className="filter-bar">
+          <div className="search-container">
+            <h2 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+              Search
+            </h2>
+            <div style={{ position: 'relative' }}>
+              <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+              <input
+                type="text"
+                placeholder="Search by name, email, or company..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ width: '100%', paddingLeft: '2.5rem' }}
+              />
+            </div>
+          </div>
+
+          <div className="tag-filters-container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h2 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+                Filter by Tags
+              </h2>
+              {selectedTags.length > 0 && (
+                <button
+                  onClick={() => setSelectedTags([])}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                >
+                  <X size={12} /> Clear
+                </button>
+              )}
+            </div>
+            <div className="tag-list-horizontal">
+              {allTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  style={{
+                    padding: '0.4rem 1rem',
+                    borderRadius: 'var(--radius-full)',
+                    border: `1px solid ${selectedTags.includes(tag) ? 'var(--accent-color)' : 'var(--surface-border)'}`,
+                    background: selectedTags.includes(tag) ? 'var(--accent-color)' : 'rgba(255,255,255,0.03)',
+                    color: selectedTags.includes(tag) ? 'white' : 'var(--text-primary)',
+                    cursor: 'pointer',
+                    fontSize: '0.8125rem',
+                    transition: 'var(--transition)'
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div className="glass" style={{ overflowX: 'auto', borderRadius: 'var(--radius-md)' }}>
           <table className="contacts-table">
