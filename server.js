@@ -42,7 +42,7 @@ app.get('/api/config', (req, res) => {
 // API Endpoint to send emails
 app.post('/api/send-email', async (req, res) => {
     try {
-        const { recipients, message, senderEmail } = req.body;
+        const { recipients, message, senderEmail, subject, senderName: customSenderName } = req.body;
 
         if (!process.env.BREVO_API_KEY) {
             return res.status(500).json({ error: 'BREVO_API_KEY is not configured on the server.' });
@@ -61,20 +61,23 @@ app.post('/api/send-email', async (req, res) => {
         const chosenSenderEmail = validSenderEmails.includes(senderEmail) ? senderEmail : validSenderEmails[0];
 
         // Parse the sender string "Name <email@domain.com>" if present
-        let senderName = "Acme";
+        let defaultSenderName = "Acme";
         let senderAddress = "onboarding@brevo.com";
 
         const senderMatch = chosenSenderEmail.match(/(?:(.+?)\s*<)?(.+?@.+?)>?$/);
         if (senderMatch) {
-            if (senderMatch[1]) senderName = senderMatch[1].trim();
+            if (senderMatch[1]) defaultSenderName = senderMatch[1].trim();
             senderAddress = senderMatch[2].trim();
         }
 
+        // Use custom sender name if provided, otherwise use the one extracted from the email string
+        const finalSenderName = customSenderName || defaultSenderName;
+
         // Send using the v4 SDK `transactionalEmails.sendTransacEmail` method
         const data = await brevo.transactionalEmails.sendTransacEmail({
-            subject: "Message from Contacts App",
-            htmlContent: `<p>${message.replace(/\n/g, '<br>')}</p>`,
-            sender: { name: senderName, email: senderAddress },
+            subject: subject || "Message from Contacts App",
+            htmlContent: message, // Support HTML messages for rich text
+            sender: { name: finalSenderName, email: senderAddress },
             to: recipients.map(email => ({ email }))
         });
 

@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
-import { X, Send, Loader2, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Send, Loader2, ChevronDown, Bold, Italic, Underline } from 'lucide-react';
 
 export default function BulkMessageModal({ selectedContactsData, onClose, onSendComplete }) {
-    const [message, setMessage] = useState('');
+    const [subject, setSubject] = useState('');
+    const [customSenderName, setCustomSenderName] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [error, setError] = useState('');
+
+    // Rich text editor ref
+    const editorRef = useRef(null);
 
     // New state variables for sender email selection
     const [availableSenders, setAvailableSenders] = useState([]);
@@ -33,8 +37,17 @@ export default function BulkMessageModal({ selectedContactsData, onClose, onSend
         fetchConfig();
     }, []);
 
+    const execCommand = (command) => {
+        document.execCommand(command, false, null);
+        editorRef.current.focus();
+    };
+
     const handleSend = async () => {
-        if (!message.trim()) return;
+        const messageHtml = editorRef.current.innerHTML;
+        if (!messageHtml || messageHtml === '<br>') {
+            setError('Please enter a message.');
+            return;
+        }
 
         setIsSending(true);
         setError('');
@@ -49,7 +62,13 @@ export default function BulkMessageModal({ selectedContactsData, onClose, onSend
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ recipients, message, senderEmail: selectedSender }),
+                body: JSON.stringify({
+                    recipients,
+                    message: messageHtml,
+                    senderEmail: selectedSender,
+                    subject: subject.trim(),
+                    senderName: customSenderName.trim()
+                }),
             });
 
             const data = await response.json();
@@ -87,11 +106,13 @@ export default function BulkMessageModal({ selectedContactsData, onClose, onSend
                 className="glass"
                 style={{
                     width: '100%',
-                    maxWidth: '500px',
+                    maxWidth: '600px',
                     borderRadius: 'var(--radius-lg)',
                     padding: '2rem',
                     boxShadow: 'var(--shadow-lg)',
-                    position: 'relative'
+                    position: 'relative',
+                    maxHeight: '90vh',
+                    overflowY: 'auto'
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -121,70 +142,107 @@ export default function BulkMessageModal({ selectedContactsData, onClose, onSend
                     </div>
                 )}
 
-                <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                        From
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                        <select
-                            value={selectedSender}
-                            onChange={(e) => setSelectedSender(e.target.value)}
-                            disabled={isLoadingConfig || isSending || availableSenders.length <= 1}
-                            style={{
-                                width: '100%',
-                                padding: '0.75rem 1rem',
-                                backgroundColor: 'rgba(0,0,0,0.2)',
-                                border: '1px solid var(--surface-border)',
-                                borderRadius: 'var(--radius-md)',
-                                color: 'white',
-                                fontFamily: 'inherit',
-                                fontSize: '0.875rem',
-                                appearance: 'none',
-                                cursor: availableSenders.length <= 1 ? 'default' : 'pointer'
-                            }}
-                        >
-                            {isLoadingConfig ? (
-                                <option>Loading senders...</option>
-                            ) : availableSenders.length === 0 ? (
-                                <option>No sender configured</option>
-                            ) : (
-                                availableSenders.map((sender, idx) => (
-                                    <option key={idx} value={sender}>{sender}</option>
-                                ))
-                            )}
-                        </select>
-                        {availableSenders.length > 1 && (
-                            <ChevronDown
-                                size={16}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                            From (Email)
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                            <select
+                                value={selectedSender}
+                                onChange={(e) => setSelectedSender(e.target.value)}
+                                disabled={isLoadingConfig || isSending || availableSenders.length <= 1}
                                 style={{
-                                    position: 'absolute',
-                                    right: '1rem',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    color: 'var(--text-secondary)',
-                                    pointerEvents: 'none'
+                                    width: '100%',
+                                    padding: '0.75rem 1rem',
+                                    backgroundColor: 'rgba(0,0,0,0.2)',
+                                    border: '1px solid var(--surface-border)',
+                                    borderRadius: 'var(--radius-md)',
+                                    color: 'white',
+                                    fontFamily: 'inherit',
+                                    fontSize: '0.875rem',
+                                    appearance: 'none',
+                                    cursor: availableSenders.length <= 1 ? 'default' : 'pointer'
                                 }}
-                            />
-                        )}
+                            >
+                                {isLoadingConfig ? (
+                                    <option>Loading senders...</option>
+                                ) : availableSenders.length === 0 ? (
+                                    <option>No sender configured</option>
+                                ) : (
+                                    availableSenders.map((sender, idx) => (
+                                        <option key={idx} value={sender}>{sender}</option>
+                                    ))
+                                )}
+                            </select>
+                            {availableSenders.length > 1 && (
+                                <ChevronDown
+                                    size={16}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '1rem',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        color: 'var(--text-secondary)',
+                                        pointerEvents: 'none'
+                                    }}
+                                />
+                            )}
+                        </div>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                            Sender Name (Optional)
+                        </label>
+                        <input
+                            type="text"
+                            value={customSenderName}
+                            onChange={(e) => setCustomSenderName(e.target.value)}
+                            placeholder="e.g. McKenzie-James"
+                            style={{ width: '100%' }}
+                            disabled={isSending}
+                        />
                     </div>
                 </div>
 
+                <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                        Subject Line
+                    </label>
+                    <input
+                        type="text"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="Type email subject..."
+                        style={{ width: '100%' }}
+                        disabled={isSending}
+                    />
+                </div>
+
                 <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                    Message
+                    Message Content
                 </label>
-                <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type your message here..."
-                    style={{
-                        width: '100%',
-                        height: '150px',
-                        resize: 'vertical',
-                        marginBottom: '1.5rem'
-                    }}
-                    disabled={isSending}
-                    autoFocus
-                />
+
+                <div className="rich-text-container" style={{ marginBottom: '1.5rem' }}>
+                    <div className="rich-text-toolbar">
+                        <button className="toolbar-btn" onClick={() => execCommand('bold')} title="Bold">
+                            <Bold size={16} />
+                        </button>
+                        <button className="toolbar-btn" onClick={() => execCommand('italic')} title="Italic">
+                            <Italic size={16} />
+                        </button>
+                        <button className="toolbar-btn" onClick={() => execCommand('underline')} title="Underline">
+                            <Underline size={16} />
+                        </button>
+                    </div>
+                    <div
+                        ref={editorRef}
+                        className="rich-text-editor"
+                        contentEditable={!isSending}
+                        onInput={(e) => setError('')}
+                        dangerouslySetInnerHTML={{ __html: '' }}
+                    />
+                </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                     <button className="btn btn-outline" onClick={onClose} disabled={isSending}>
@@ -192,7 +250,7 @@ export default function BulkMessageModal({ selectedContactsData, onClose, onSend
                     </button>
                     <button
                         className="btn btn-primary"
-                        disabled={!message.trim() || isSending || isLoadingConfig || availableSenders.length === 0}
+                        disabled={isSending || isLoadingConfig || availableSenders.length === 0}
                         onClick={handleSend}
                     >
                         {isSending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
